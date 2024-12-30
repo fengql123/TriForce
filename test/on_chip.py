@@ -6,7 +6,7 @@ root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(root_dir)
 
 import torch
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, AutoModelForCausalLM
 from termcolor import colored
 from tqdm import tqdm
 from data.dataset import get_dataset
@@ -46,14 +46,21 @@ if __name__ == "__main__":
     ######## model initialization ########
     if args.target == 'llama-7B-128K':
         target = LlamaForCausalLM.from_pretrained("NousResearch/Yarn-Llama-2-7b-128k", torch_dtype=torch.float16, device_map="cuda:0")
+        tokenizer = AutoTokenizer.from_pretrained("NousResearch/Yarn-Llama-2-7b-128k", use_fast=True, legacy=False)
     else:
-        raise NotImplementedError
+        target = AutoModelForCausalLM.from_pretrained(
+            args.target, 
+            torch_dtype=torch.bfloat16, 
+            attn_implementation="flash_attention_2",
+            device_map="auto",
+            trust_remote_code=True)
+        tokenizer = AutoTokenizer.from_pretrained(args.target, use_fast=True, legacy=False)
+        
     target = target.eval()
 
     draft = LlamaForCausalLM_68M.from_pretrained("JackFram/llama-68m", torch_dtype=torch.float16, device_map="cuda:0")
     draft = draft.eval()
-
-    tokenizer = AutoTokenizer.from_pretrained("NousResearch/Yarn-Llama-2-7b-128k", use_fast=True, legacy=False)
+    
     tokenized_prompts = get_dataset(dataset_name=args.dataset, tokenizer=tokenizer, datalen=args.prefill)
 
     ######## sampling parameters ########
