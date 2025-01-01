@@ -13,7 +13,7 @@ from transformers.models.llama.modeling_llama import(
 
 from transformers.modeling_outputs import CausalLMOutputWithPast
 
-from transformers.modelling_flash_attention_utils import _flash_attention_forward
+from transformers.modeling_flash_attention_utils import _flash_attention_forward
 
 from .config_yarn import LlamaConfig
 from models.cache import Cache, RetrievalCache
