@@ -10,8 +10,8 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from termcolor import colored
 from tqdm import tqdm
 from data.dataset import get_dataset
-# from models.modeling_llama import LlamaForCausalLM
-# from models.modeling_llama_68m import LlamaForCausalLM as LlamaForCausalLM_68M
+from models.modeling_llama import LlamaForCausalLM
+from models.modeling_llama_68m import LlamaForCausalLM as LlamaForCausalLM_68M
 from models.cache import FlashSimpleCache, StreamingLLMEvictionCache, RetrievalCache
 from utils.decoding import Autoregressive, TriForce
 from utils.misc import print_config
@@ -48,17 +48,12 @@ if __name__ == "__main__":
         target = LlamaForCausalLM.from_pretrained("NousResearch/Yarn-Llama-2-7b-128k", torch_dtype=torch.float16, device_map="cuda:0")
         tokenizer = AutoTokenizer.from_pretrained("NousResearch/Yarn-Llama-2-7b-128k", use_fast=True, legacy=False)
     else:
-        target = AutoModelForCausalLM.from_pretrained(
-            args.target, 
-            torch_dtype=torch.bfloat16, 
-            attn_implementation="flash_attention_2",
-            device_map="cuda:0",
-            trust_remote_code=True)
+        target = LlamaForCausalLM.from_pretrained(args.target, torch_dtype=torch.float16, device_map="cuda:0")
         tokenizer = AutoTokenizer.from_pretrained(args.target, use_fast=True, legacy=False)
         
     target = target.eval()
 
-    draft = AutoModelForCausalLM.from_pretrained("JackFram/llama-68m", torch_dtype=torch.float16, device_map="cuda:0", trust_remote_code=True)
+    draft = LlamaForCausalLM_68M.from_pretrained("JackFram/llama-68m", torch_dtype=torch.float16, device_map="cuda:0", trust_remote_code=True)
     draft = draft.eval()
     
     tokenized_prompts = get_dataset(dataset_name=args.dataset, tokenizer=tokenizer, datalen=args.prefill)

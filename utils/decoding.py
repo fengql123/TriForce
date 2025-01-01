@@ -45,8 +45,13 @@ def TriForce(tokenizer, graph_engine, input_ids, gamma=4, max_len=256, top_k=-1,
     graph_engine.engine.graph_cache.reset()
     graph_engine.engine.draft_cache.reset()
 
+    # full prefill
     logits = graph_engine.inference(input_ids=input_ids[:,:-1])
+    
+    # use last token to init retrieval cache
     logits = graph_engine.inference(input_ids=input_ids[:,-1:])
+    
+    # draft prefill
     _ = graph_engine.graph_draft_prefill(input_ids=input_ids)
 
     if verbose:

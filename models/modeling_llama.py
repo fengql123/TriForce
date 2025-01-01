@@ -13,10 +13,38 @@ from transformers.models.llama.modeling_llama import(
 
 from transformers.modeling_outputs import CausalLMOutputWithPast
 
-from flash_attn import flash_attn_with_kvcache
+from transfomers.modelling_flash_attention_utils import _flash_attention_forward
 
 from .config_yarn import LlamaConfig
 from models.cache import Cache, RetrievalCache
+
+def flash_attention_forward(
+    query: torch.Tensor,
+    key: torch.Tensor,
+    value: torch.Tensor,
+    attention_mask: Optional[torch.Tensor],
+    dropout: float = 0.0,
+    scaling: Optional[float] = None,
+): 
+    seq_len = query.shape[2]
+
+    # FA2 uses non-transposed inputs
+    query = query.transpose(1, 2)
+    key = key.transpose(1, 2)
+    value = value.transpose(1, 2)
+    
+    attn_output = _flash_attention_forward(
+        query,
+        key,
+        value,
+        attention_mask,
+        query_length=seq_len,
+        is_causal=True,
+        dropout=dropout,
+        softmax_scale=scaling
+    )
+
+    return attn_output
 
 class LlamaRotaryEmbedding(nn.Module):
     def __init__(self, dim, max_position_embeddings=2048, base=10000, device=None):
@@ -236,8 +264,14 @@ class LlamaAttention(nn.Module):
                 else:
                     # update graph cache (customized)
                     graph_cache.update_graph_cache_retrieval(kv_cache, query_states, self.layer_idx)
-
-        attn_output = flash_attn_with_kvcache(q=query_states, k_cache=key_states, v_cache=value_states, softmax_scale=1/torch.sqrt(torch.tensor(self.head_dim, dtype=torch.float16)), causal=True)
+                    
+        attn_output = flash_attention_forward(
+            query=query_states,
+            key=key_states,
+            value=value_states,
+            scaling=1/torch.sqrt(torch.tensor(self.head_dim, dtype=torch.float16)),
+            attention_mask=None
+        )
 
         attn_output = attn_output.reshape(bsz, q_len, self.hidden_size)
         attn_output = self.o_proj(attn_output)
