@@ -180,7 +180,8 @@ class LlamaConfig(PretrainedConfig):
         mlp_bias=False,
         head_dim=None,
         **kwargs,
-    ):
+    ):  
+        print("initialized")
         self.vocab_size = vocab_size
         self.max_position_embeddings = max_position_embeddings
         self.hidden_size = hidden_size
