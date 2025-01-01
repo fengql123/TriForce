@@ -209,6 +209,7 @@ class LlamaConfig(PretrainedConfig):
         # print(self.rope_scaling)
         # if self.rope_scaling is not None and "type" in self.rope_scaling:
         #     self.rope_scaling["rope_type"] = self.rope_scaling["type"]
+        print(self.rope_scaling)
         rope_config_validation(self)
 
         super().__init__(
