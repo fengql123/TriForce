@@ -44,8 +44,8 @@ if __name__ == "__main__":
     args = parse_arguments()
 
     ######## model initialization ########
-    if args.target == 'llama-7B-128K':
-        target = LlamaForCausalLM.from_pretrained("NousResearch/Yarn-Llama-2-7b-128k", torch_dtype=torch.float16, device_map="cuda:0")
+    if 'llama' in args.target:
+        target = LlamaForCausalLM.from_pretrained(args.target, torch_dtype=torch.float16, device_map="cuda:0")
     else:
         raise NotImplementedError
     target = target.eval()
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     draft = LlamaForCausalLM_68M.from_pretrained("JackFram/llama-68m", torch_dtype=torch.float16, device_map="cuda:0")
     draft = draft.eval()
 
-    tokenizer = AutoTokenizer.from_pretrained("NousResearch/Yarn-Llama-2-7b-128k", use_fast=True, legacy=False)
+    tokenizer = AutoTokenizer.from_pretrained(args.target, use_fast=True, legacy=False)
     tokenized_prompts = get_dataset(dataset_name=args.dataset, tokenizer=tokenizer, datalen=args.prefill)
 
     ######## sampling parameters ########
