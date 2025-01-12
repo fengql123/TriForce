@@ -44,10 +44,7 @@ if __name__ == "__main__":
     args = parse_arguments()
 
     ######## model initialization ########
-    if 'llama' in args.target:
-        target = LlamaForCausalLM.from_pretrained(args.target, torch_dtype=torch.float16, device_map="cuda:0")
-    else:
-        raise NotImplementedError
+    target = LlamaForCausalLM.from_pretrained(args.target, torch_dtype=torch.float16, device_map="cuda:0")
     target = target.eval()
 
     draft = LlamaForCausalLM_68M.from_pretrained("JackFram/llama-68m", torch_dtype=torch.float16, device_map="cuda:0")
