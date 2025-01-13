@@ -150,11 +150,10 @@ class RetrievalCache(Cache):
         # print(query_states.shape, self.chunk_k[layer_idx].shape)
 
         assert 1 == query_states.shape[1], "query_states should be 1 for init"
-        print(kv_cache.key_cache[layer_idx].shape, kv_cache.value_cache[layer_idx].shape)
         chunk_k = kv_cache.key_cache[layer_idx,:,:self.prefill].cuda().view(1, self.chunks, self.chunk_size, self.num_heads, self.head_dim).mean(dim=-3)
         
         # (bsz, 32, chunks)
-        print(chunk_k.shape, query_states.shape)
+        print(query_states.permute(0, 2, 1, 3).shape, chunk_k.permute(0, 2, 3, 1).shape)
         chunk_attn = torch.matmul(query_states.permute(0, 2, 1, 3), chunk_k.permute(0, 2, 3, 1)).squeeze(2)
         # (bsz, 32, select_sets) --> (bsz, select_sets, 32)
         _, topk_idx_rest = torch.topk(chunk_attn[:, :, 1:], k=self.select_sets-1, dim=-1)
