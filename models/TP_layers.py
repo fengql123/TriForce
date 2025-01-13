@@ -1,6 +1,6 @@
 import torch
 from transformers.models.llama.modeling_llama import LlamaDecoderLayer
-from .config_yarn import LlamaConfig
+from .config import LlamaConfig
 
 class DistributedOffloadingConfig:
     def __init__(self, config: LlamaConfig, local_rank=0, world_size=1) -> None:

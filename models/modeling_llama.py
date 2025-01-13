@@ -16,7 +16,7 @@ from transformers.modeling_outputs import CausalLMOutputWithPast
 from flash_attn import flash_attn_with_kvcache
 from transformers.modeling_rope_utils import ROPE_INIT_FUNCTIONS
 
-from .config_yarn import LlamaConfig
+from .config import LlamaConfig
 from models.cache import Cache, RetrievalCache
 
 class LlamaRotaryEmbedding(nn.Module):

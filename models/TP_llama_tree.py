@@ -12,7 +12,7 @@ from tqdm import tqdm
 from .TP_layers import DistributedLlamaLayer, DistributedLlamaLayerBuffer, DistributedOffloadingConfig
 from .tensor_op import RMSNorm, TP_MLP, TP_Attention, TP_Attention_Retrieval, TP_Attention_Tree_Retrieval, TP_Attention_ssl
 import torch.distributed as dist
-from .config_yarn import LlamaConfig
+from .config import LlamaConfig
 from .cache import DistributedKVCacheBuffer, DistributedSimpleCache, DistributedRetrievalCache_Seqouia
 from utils.sampling import norm_logits
 
