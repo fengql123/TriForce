@@ -154,6 +154,7 @@ class RetrievalCache(Cache):
         chunk_k = kv_cache.key_cache[layer_idx,:,:self.prefill].cuda().view(1, self.chunks, self.chunk_size, self.num_heads, self.head_dim).mean(dim=-3)
         
         # (bsz, 32, chunks)
+        print(chunk_k.shape, query_states.shape)
         chunk_attn = torch.matmul(query_states.permute(0, 2, 1, 3), chunk_k.permute(0, 2, 3, 1)).squeeze(2)
         # (bsz, 32, select_sets) --> (bsz, select_sets, 32)
         _, topk_idx_rest = torch.topk(chunk_attn[:, :, 1:], k=self.select_sets-1, dim=-1)
