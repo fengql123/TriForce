@@ -86,19 +86,19 @@ if __name__ == "__main__":
     print(colored(f"tokenized_prompts length: {len(tokenized_prompts)}", "green"))
 
     ######## Warm up for baseline ########
-    n_warmups = 1
-    input_ids = tokenized_prompts[0].to(target.device)[:,:prefill]
-    for i in tqdm(range(n_warmups), desc="Autoregressive Warmup"):
-        Autoregressive(tokenizer, graph_engine, input_ids, max_len=gen_len, top_k=top_k, top_p=top_p, temperature=temperature, verbose=verbose)
+    # n_warmups = 1
+    # input_ids = tokenized_prompts[0].to(target.device)[:,:prefill]
+    # for i in tqdm(range(n_warmups), desc="Autoregressive Warmup"):
+    #     Autoregressive(tokenizer, graph_engine, input_ids, max_len=gen_len, top_k=top_k, top_p=top_p, temperature=temperature, verbose=verbose)
 
-    all_speed = []
-    for input_ids in tqdm(tokenized_prompts[:1], desc="Autoregressive Test"):
-        input_ids = input_ids.to(target.device)[:,:prefill]
-        speed = Autoregressive(tokenizer, graph_engine, input_ids, max_len=gen_len, top_k=top_k, top_p=top_p, temperature=temperature, verbose=verbose)
-        all_speed.append(speed)
+    # all_speed = []
+    # for input_ids in tqdm(tokenized_prompts[:1], desc="Autoregressive Test"):
+    #     input_ids = input_ids.to(target.device)[:,:prefill]
+    #     speed = Autoregressive(tokenizer, graph_engine, input_ids, max_len=gen_len, top_k=top_k, top_p=top_p, temperature=temperature, verbose=verbose)
+    #     all_speed.append(speed)
 
-    baseline_latency = 1000/(sum(all_speed) / len(all_speed))
-    print(colored(f"[Autoregressive] average latency: {baseline_latency} ms", "red"))
+    # baseline_latency = 1000/(sum(all_speed) / len(all_speed))
+    # print(colored(f"[Autoregressive] average latency: {baseline_latency} ms", "red"))
 
     ######## Warm up for our method ########
     n_warmups = 3
