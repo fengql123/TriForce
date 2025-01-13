@@ -153,7 +153,7 @@ class LlamaYaRNRotaryEmbedding(nn.Module):
         self.register_buffer("cos_cached", (emb.cos() * self.mscale).to(torch.float16), persistent=False)
         self.register_buffer("sin_cached", (emb.sin() * self.mscale).to(torch.float16), persistent=False)
 
-    def forward(self, x, seq_len=None):
+    def forward(self, x, p, seq_len=None):
         return (
             self.cos_cached.to(dtype=x.dtype),
             self.sin_cached.to(dtype=x.dtype),
@@ -228,6 +228,15 @@ class LlamaAttention(nn.Module):
         #     else:
         #         raise ValueError(f"Unknown RoPE scaling type {scaling_type}")
         self.rotary_emb = LlamaRotaryEmbedding(self.config)
+        scaling_type = self.config.rope_scaling["type"]
+        scaling_factor = self.config.rope_scaling["factor"]
+        if scaling_type == "yarn":
+            original_max_position_embeddings = self.config.rope_scaling["original_max_position_embeddings"]
+            self.rotary_emb = LlamaYaRNRotaryEmbedding(
+                self.head_dim, base=10000, scaling_factor=scaling_factor,
+                max_position_embeddings=self.max_position_embeddings,
+                original_max_position_embeddings=original_max_position_embeddings,
+            )
 
     def forward(
         self,
@@ -249,7 +258,6 @@ class LlamaAttention(nn.Module):
         query_states = query_states.view(bsz, q_len, self.num_heads, self.head_dim).transpose(1, 2)
         key_states = key_states.view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
         value_states = value_states.view(bsz, q_len, self.num_key_value_heads, self.head_dim)
-
         cos, sin = self.rotary_emb(value_states, position_ids)
         query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids)
         query_states = query_states.transpose(1, 2)
