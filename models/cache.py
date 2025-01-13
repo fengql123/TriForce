@@ -171,6 +171,8 @@ class RetrievalCache(Cache):
         
         num_head_groups = hq // hk
         chunk_k = repeat_kv(chunk_k.permute(0, 2, 1, 3), num_head_groups)
+        print(chunk_k.shape)
+        print(query_states.shape)
         chunk_attn = torch.matmul(query_states.permute(0, 2, 1, 3), chunk_k.permute(0, 1, 3, 2)).squeeze(2)
         chunk_attn = chunk_attn[:,:nk,:]
         
