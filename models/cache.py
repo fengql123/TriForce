@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from numpy import dtype
 import torch
 import math
+from einops import einsum, rearrange
 
 class Cache:
     """
@@ -153,20 +154,28 @@ class RetrievalCache(Cache):
         chunk_k = kv_cache.key_cache[layer_idx,:,:self.prefill].cuda().view(1, self.chunks, self.chunk_size, self.num_heads, self.head_dim).mean(dim=-3)
         
         # (bsz, 32, chunks)
-        print(query_states.permute(0, 2, 1, 3).shape, chunk_k.permute(0, 2, 3, 1).shape)
-        chunk_attn = torch.matmul(query_states.permute(0, 2, 1, 3), chunk_k.permute(0, 2, 3, 1)).squeeze(2)
-        # (bsz, 32, select_sets) --> (bsz, select_sets, 32)
+        query_states = rearrange(query_states, "b n h d -> b h n d")
+        chunk_k = rearrange(chunk_k, "b s h d -> b h s d")
+        
+        bq, hq, nq, dq = query_states.shape
+        bk, hk, nk, dk = chunk_k.shape
+        
+        num_head_groups = hq // hk
+        query_states = rearrange(query_states, "b (h g) n d -> b g h n d", g=num_head_groups)
+        chunk_attn = einsum(query_states, chunk_k, "b g h n d, b h s d -> b g h n s").mean(dim=1)
+        
+        # (bsz, k, select_sets) --> (bsz, select_sets, k)
         _, topk_idx_rest = torch.topk(chunk_attn[:, :, 1:], k=self.select_sets-1, dim=-1)
         topk_idx_rest += 1
         topk_idx_first = torch.zeros((topk_idx_rest.shape[0], topk_idx_rest.shape[1], 1), device=topk_idx_rest.device, dtype=topk_idx_rest.dtype)
-        topk_idx = torch.cat([topk_idx_first, topk_idx_rest], dim=-1)  # (bsz, 32, select_sets)
+        topk_idx = torch.cat([topk_idx_first, topk_idx_rest], dim=-1)  # (bsz, k, select_sets)
         expanded_index_tensor = topk_idx.permute(0, 2, 1).unsqueeze(-1).unsqueeze(-1).expand(-1, -1, -1, self.chunk_size, self.head_dim)
 
-        # (bsz, prefill, 32, head_dim) --> (bsz, chunks, chunk_size, 32, head_dim) --> (bsz, chunks, 32, chunk_size, head_dim)
+        # (bsz, prefill, k, head_dim) --> (bsz, chunks, chunk_size, k, head_dim) --> (bsz, chunks, k, chunk_size, head_dim)
         key_ = kv_cache.key_cache[layer_idx][:, :self.prefill].reshape(1, self.chunks, self.chunk_size, self.num_heads, self.head_dim).cuda()
         key_ = key_.permute(0, 1, 3, 2, 4)
-        result_tensor = torch.gather(key_, 1, expanded_index_tensor) # (bsz, select_sets, 32, chunk_size, head_dim)
-        # (bsz, select_sets, 32, chunk_size, head_dim) --> (bsz, select_sets*chunk_size, 32, head_dim)
+        result_tensor = torch.gather(key_, 1, expanded_index_tensor) # (bsz, select_sets, k, chunk_size, head_dim)
+        # (bsz, select_sets, 32, chunk_size, head_dim) --> (bsz, select_sets*chunk_size, k, head_dim)
         self.key_cache[layer_idx][:,:self.max_budget] = result_tensor.permute(0, 1, 3, 2, 4).reshape(1, self.select_sets*self.chunk_size, self.num_heads, self.head_dim).clone()
 
         value_ = kv_cache.value_cache[layer_idx][:, :self.prefill].reshape(1, self.chunks, self.chunk_size, self.num_heads, self.head_dim).cuda()
