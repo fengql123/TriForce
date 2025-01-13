@@ -162,7 +162,7 @@ class RetrievalCache(Cache):
         
         num_head_groups = hq // hk
         query_states = rearrange(query_states, "b (h g) n d -> b g h n d", g=num_head_groups)
-        chunk_attn = einsum(query_states, chunk_k, "b g h n d, b h s d -> b g h n s").mean(dim=1)
+        chunk_attn = einsum(query_states, chunk_k, "b g h n d, b h s d -> b g h n s").mean(dim=1).squeeze(2)
         
         # (bsz, k, select_sets) --> (bsz, select_sets, k)
         print(chunk_attn.shape)
