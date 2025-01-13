@@ -165,12 +165,9 @@ class RetrievalCache(Cache):
         chunk_attn = einsum(query_states, chunk_k, "b g h n d, b h s d -> b g h n s").mean(dim=1).squeeze(2)
         
         # (bsz, k, select_sets) --> (bsz, select_sets, k)
-        print(chunk_attn.shape)
         _, topk_idx_rest = torch.topk(chunk_attn[:, :, 1:], k=self.select_sets-1, dim=-1)
         topk_idx_rest += 1
         topk_idx_first = torch.zeros((topk_idx_rest.shape[0], topk_idx_rest.shape[1], 1), device=topk_idx_rest.device, dtype=topk_idx_rest.dtype)
-        
-        print(topk_idx_first.shape, topk_idx_rest.shape)
         topk_idx = torch.cat([topk_idx_first, topk_idx_rest], dim=-1)  # (bsz, k, select_sets)
         expanded_index_tensor = topk_idx.permute(0, 2, 1).unsqueeze(-1).unsqueeze(-1).expand(-1, -1, -1, self.chunk_size, self.head_dim)
 
