@@ -264,10 +264,6 @@ class StreamingLLMEvictionCache(Cache):
             return
         for layer_idx in range(self.layers):
             size_keep = self.recent_size - incoming
-            print("key_cache shape:", self.key_cache[layer_idx].shape)
-            print("start_size:", self.start_size, " size_keep:", size_keep, " seq_len:", self.seq_len)
-            print("Left slice shape:", self.key_cache[layer_idx][:, self.start_size:self.start_size+size_keep].shape)
-            print("Right slice shape:", self.key_cache[layer_idx][:, self.seq_len-size_keep:self.seq_len].shape)
             self.key_cache[layer_idx][:, self.start_size:self.start_size+size_keep] = self.key_cache[layer_idx][:, self.seq_len-size_keep:self.seq_len].clone()
             self.value_cache[layer_idx][:, self.start_size:self.start_size+size_keep] = self.value_cache[layer_idx][:, self.seq_len-size_keep:self.seq_len].clone()
 
