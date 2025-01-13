@@ -150,7 +150,7 @@ class RetrievalCache(Cache):
         # print(query_states.shape, self.chunk_k[layer_idx].shape)
 
         assert 1 == query_states.shape[1], "query_states should be 1 for init"
-        print(chunk_k.shape)
+        print(kv_cache.key_cache[layer_idx].shape, kv_cache.value_cache[layer_idx].shape)
         chunk_k = kv_cache.key_cache[layer_idx,:,:self.prefill].cuda().view(1, self.chunks, self.chunk_size, self.num_heads, self.head_dim).mean(dim=-3)
         
         # (bsz, 32, chunks)
