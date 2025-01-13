@@ -185,6 +185,7 @@ class LlamaAttention(nn.Module):
                 base=self.rope_theta,
             )
         else:
+            print(self.config.rope_scaling)
             scaling_type = self.config.rope_scaling["type"]
             scaling_factor = self.config.rope_scaling["factor"]
             if scaling_type == "yarn":
