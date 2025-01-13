@@ -114,7 +114,8 @@ class OffloadingFlashSimpleCache(Cache):
             self.seq_len += key_states.shape[-3]
 
         return key, value
-    
+
+
 def repeat_kv(hidden_states: torch.Tensor, n_rep: int) -> torch.Tensor:
     """
     This is the equivalent of torch.repeat_interleave(x, dim=1, repeats=n_rep). The hidden states go from (batch,
@@ -166,15 +167,16 @@ class RetrievalCache(Cache):
         chunk_k = kv_cache.key_cache[layer_idx,:,:self.prefill].cuda().view(1, self.chunks, self.chunk_size, self.num_heads, self.head_dim).mean(dim=-3)
         
         # (bsz, 32, chunks)
+        query_states = rearrange(query_states, "b n h d -> b h n d")
+        chunk_k = rearrange(chunk_k, "b s h d -> b h s d")
+        
         bq, hq, nq, dq = query_states.shape
         bk, hk, nk, dk = chunk_k.shape
         
         num_head_groups = hq // hk
-        chunk_k = repeat_kv(chunk_k.permute(0, 2, 1, 3), num_head_groups)
-        print(chunk_k.shape)
-        print(query_states.shape)
-        chunk_attn = torch.matmul(query_states.permute(0, 2, 1, 3), chunk_k.permute(0, 1, 3, 2)).squeeze(2)
-        chunk_attn = chunk_attn[:,:nk,:]
+        chunk_k = repeat_kv(chunk_k, num_head_groups)
+        chunk_attn = torch.matmul(query_states, chunk_k.permute(0, 1, 3, 2)).squeeze(2)
+        chunk_attn = chunk_attn[:, :hk, :]
         
         # (bsz, k, select_sets) --> (bsz, select_sets, k)
         _, topk_idx_rest = torch.topk(chunk_attn[:, :, 1:], k=self.select_sets-1, dim=-1)
