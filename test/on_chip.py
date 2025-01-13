@@ -47,7 +47,7 @@ if __name__ == "__main__":
     target = LlamaForCausalLM.from_pretrained(args.target, torch_dtype=torch.float16, device_map="cuda:0")
     target = target.eval()
 
-    draft = LlamaForCausalLM.from_pretrained("NousResearch/Llama-3.2-1B", torch_dtype=torch.float16, device_map="cuda:0")
+    draft = LlamaForCausalLM.from_pretrained(args.target, torch_dtype=torch.float16, device_map="cuda:0")
     draft = draft.eval()
 
     tokenizer = AutoTokenizer.from_pretrained(args.target, use_fast=True, legacy=False)
