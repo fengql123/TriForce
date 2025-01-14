@@ -50,7 +50,7 @@ if __name__ == "__main__":
     draft = LlamaForCausalLM.from_pretrained("NousResearch/Llama-3.2-1B", torch_dtype=torch.float16, device_map="cuda:0")
     draft = draft.eval()
     
-    model = AutoModel.from_pretrained("NousResearch/Llama-3.2-1B")
+    model = AutoModel.from_pretrained("NousResearch/Llama-3.2-3B")
     state_dict = model.state_dict()
     print("Keys from state_dict():")
     for key in state_dict.keys():
