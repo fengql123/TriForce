@@ -55,6 +55,8 @@ if __name__ == "__main__":
     print("Keys from state_dict():")
     for key in state_dict.keys():
         print(key)
+        
+    print(model)
 
     tokenizer = AutoTokenizer.from_pretrained(args.target, use_fast=True, legacy=False)
     tokenized_prompts = get_dataset(dataset_name=args.dataset, tokenizer=tokenizer, datalen=args.prefill)
