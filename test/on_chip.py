@@ -47,10 +47,10 @@ if __name__ == "__main__":
     target = LlamaForCausalLM.from_pretrained(args.target, torch_dtype=torch.float16, device_map="cuda:0")
     target = target.eval()
 
-    draft = LlamaForCausalLM.from_pretrained("NousResearch/Llama-3.2-1B", torch_dtype=torch.float16, device_map="cuda:0")
+    draft = LlamaForCausalLM.from_pretrained("NousResearch/Hermes-3-Llama-3.2-3B", torch_dtype=torch.float16, device_map="cuda:0")
     draft = draft.eval()
     
-    model = AutoModel.from_pretrained("NousResearch/Llama-3.2-3B")
+    model = AutoModel.from_pretrained("NousResearch/Hermes-3-Llama-3.2-3B")
     state_dict = model.state_dict()
     print("Keys from state_dict():")
     for key in state_dict.keys():
