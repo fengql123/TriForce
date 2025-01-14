@@ -6,7 +6,7 @@ root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(root_dir)
 
 import torch
-from transformers import AutoTokenizer, AutoModel
+from transformers import AutoTokenizer, AutoModelForCausalLM
 from termcolor import colored
 from tqdm import tqdm
 from data.dataset import get_dataset
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     draft = LlamaForCausalLM.from_pretrained("NousResearch/Hermes-3-Llama-3.2-3B", torch_dtype=torch.float16, device_map="cuda:0")
     draft = draft.eval()
     
-    model = AutoModel.from_pretrained("NousResearch/Hermes-3-Llama-3.2-3B")
+    model = AutoModelForCausalLM.from_pretrained("NousResearch/Hermes-3-Llama-3.2-3B")
     state_dict = model.state_dict()
     print("Keys from state_dict():")
     for key in state_dict.keys():
