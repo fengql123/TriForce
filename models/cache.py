@@ -176,7 +176,7 @@ class RetrievalCache(Cache):
         num_head_groups = hq // hk
         chunk_k = repeat_kv(chunk_k, num_head_groups)
         chunk_attn = torch.matmul(query_states, chunk_k.permute(0, 1, 3, 2)).squeeze(2)
-        chunk_attn = chunk_attn[:, :hk, :]
+        chunk_attn = chunk_attn.view(bq, hk, num_head_groups, nk).mean(dim=2)
         
         # (bsz, k, select_sets) --> (bsz, select_sets, k)
         _, topk_idx_rest = torch.topk(chunk_attn[:, :, 1:], k=self.select_sets-1, dim=-1)
