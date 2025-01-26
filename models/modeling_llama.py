@@ -279,6 +279,7 @@ class LlamaAttention(nn.Module):
         query_states = query_states.transpose(1, 2)
         key_states = key_states.transpose(1, 2)
         value_states = value_states.transpose(1, 2)
+        print(value_states.shape)
         
 
         if spec: # spec decoding
