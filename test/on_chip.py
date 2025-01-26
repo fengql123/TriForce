@@ -50,13 +50,13 @@ if __name__ == "__main__":
     draft = LlamaForCausalLM.from_pretrained("NousResearch/Llama-3.2-1B", torch_dtype=torch.float16, device_map="cuda:0")
     draft = draft.eval()
     
-    model = AutoModelForCausalLM.from_pretrained("NousResearch/Llama-3.2-1B")
-    state_dict = model.state_dict()
-    print("Keys from state_dict():")
-    for key in state_dict.keys():
-        print(key)
+    # model = AutoModelForCausalLM.from_pretrained("NousResearch/Llama-3.2-1B")
+    # state_dict = model.state_dict()
+    # print("Keys from state_dict():")
+    # for key in state_dict.keys():
+    #     print(key)
         
-    print(model)
+    # print(model)
 
     tokenizer = AutoTokenizer.from_pretrained(args.target, use_fast=True, legacy=False)
     tokenized_prompts = get_dataset(dataset_name=args.dataset, tokenizer=tokenizer, datalen=args.prefill)

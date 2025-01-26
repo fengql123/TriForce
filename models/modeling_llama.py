@@ -261,8 +261,6 @@ class LlamaAttention(nn.Module):
         value_states = value_states.view(bsz, q_len, self.num_key_value_heads, self.head_dim)
         cos, sin = self.rotary_emb(value_states, position_ids)
         query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids)
-        query_states = query_states.transpose(1, 2)
-        key_states = key_states.transpose(1, 2)
 
         if spec: # spec decoding
             key_states, value_states = graph_cache.update(new_k_cache=key_states, new_v_cache=value_states, layer_idx=self.layer_idx)
