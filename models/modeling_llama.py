@@ -242,15 +242,15 @@ class LlamaAttention(nn.Module):
         #         raise ValueError(f"Unknown RoPE scaling type {scaling_type}")
         self.rotary_emb = LlamaRotaryEmbedding(self.config)
         
-        if "type" in self.config.rope_scaling and self.config.rope_scaling["type"] == "yarn":
-            scaling_type = self.config.rope_scaling["type"]
-            scaling_factor = self.config.rope_scaling["factor"]
-            original_max_position_embeddings = self.config.rope_scaling["original_max_position_embeddings"]
-            self.rotary_emb = LlamaYaRNRotaryEmbedding(
-                self.head_dim, base=10000, scaling_factor=scaling_factor,
-                max_position_embeddings=self.max_position_embeddings,
-                original_max_position_embeddings=original_max_position_embeddings,
-            )
+        # if "type" in self.config.rope_scaling and self.config.rope_scaling["type"] == "yarn":
+        #     scaling_type = self.config.rope_scaling["type"]
+        #     scaling_factor = self.config.rope_scaling["factor"]
+        #     original_max_position_embeddings = self.config.rope_scaling["original_max_position_embeddings"]
+        #     self.rotary_emb = LlamaYaRNRotaryEmbedding(
+        #         self.head_dim, base=10000, scaling_factor=scaling_factor,
+        #         max_position_embeddings=self.max_position_embeddings,
+        #         original_max_position_embeddings=original_max_position_embeddings,
+        #     )
 
     def forward(
         self,
