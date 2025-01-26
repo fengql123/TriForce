@@ -112,7 +112,7 @@ if __name__ == "__main__":
     n_warmups = 3
     input_ids = tokenized_prompts[0].to(target.device)[:,:prefill]
     for i in tqdm(range(n_warmups), desc="TriForce Warmup"):
-        TriForce(tokenizer, graph_engine, input_ids, gamma=gamma, max_len=gen_len, top_k=top_k, top_p=top_p, temperature=temperature, verbose=True, file_path=None, dataset=args.dataset, spec_args={'budget': args.budget, 'draft': args.draft, 'chunk_size': chunk_size, 'baseline': baseline_latency/1000})
+        TriForce(tokenizer, graph_engine, input_ids, gamma=gamma, max_len=gen_len, top_k=top_k, top_p=top_p, temperature=temperature, verbose=False, file_path=None, dataset=args.dataset, spec_args={'budget': args.budget, 'draft': args.draft, 'chunk_size': chunk_size, 'baseline': baseline_latency/1000})
 
     all_acceptance_rate = []
     all_speed = []
