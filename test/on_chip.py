@@ -50,7 +50,7 @@ if __name__ == "__main__":
     # draft = LlamaForCausalLM.from_pretrained(args.target, torch_dtype=torch.float16, device_map="cuda:0")
     # draft = draft.eval()
     
-    draft = LlamaForCausalLM.from_pretrained("JackFram/llama-68m", torch_dtype=torch.float16, device_map="cuda:0")
+    draft = LlamaForCausalLM.from_pretrained("meta-llama/Llama-3.2-1B-Instruct", torch_dtype=torch.float16, device_map="cuda:0")
     draft = draft.eval()
     
     # model = AutoModelForCausalLM.from_pretrained("NousResearch/Llama-3.2-1B")
