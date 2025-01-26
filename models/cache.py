@@ -142,8 +142,8 @@ class RetrievalCache(Cache):
 
         self.real_budget = max_budget + gamma + 1
 
-        self.hidden_size = model.config.num_attention_heads
-        self.num_heads = model.config.num_heads
+        self.hidden_size = model.config.hidden_size
+        self.num_heads = model.config.num_attention_heads
         self.head_dim = self.hidden_size // model.config.num_attention_heads
         self.layers = model.config.num_hidden_layers
 
