@@ -73,7 +73,7 @@ def TriForce(tokenizer, graph_engine, input_ids, gamma=4, max_len=256, top_k=-1,
         
         # speculative decoding for draft (68m) and retrieval 7b model
         pred_token_idx = next_token
-        verify_tokens, speculation_probs, acc_rate_middle = Middle_Spec(pred_token_idx, graph_engine, gamma, False, tokenizer)
+        verify_tokens, speculation_probs, acc_rate_middle = Middle_Spec(pred_token_idx, graph_engine, gamma, True, tokenizer)
         
         acc_rate_middle_list.append(acc_rate_middle)
         generated_ids = verify_tokens[1:]
