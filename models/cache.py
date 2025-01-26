@@ -24,7 +24,7 @@ class FlashSimpleCache(Cache):
         self.max_budget = max_budget
 
         self.hidden_size = model.config.hidden_size
-        self.num_heads = model.config.num_key_value_heads
+        self.num_heads = model.config.num_attention_heads
         self.head_dim = self.hidden_size // model.config.num_attention_heads
         self.layers = model.config.num_hidden_layers
 
@@ -223,7 +223,7 @@ class StreamingLLMEvictionCache(Cache):
         self.seq_len = 0 # just for prefill usage
 
         self.hidden_size = model.config.hidden_size
-        self.num_heads = model.config.num_key_value_heads
+        self.num_heads = model.config.num_attention_heads
         self.head_dim = self.hidden_size // model.config.num_attention_heads
         self.layers = model.config.num_hidden_layers
 
