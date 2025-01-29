@@ -79,7 +79,7 @@ if __name__ == "__main__":
     chunk_size = args.chunk_size
     max_budget = args.budget
 
-    print_config(draft, target, prefill, gamma, top_k, top_p, temperature, file_path=None, method="TriForce", spec_args={'budget': args.budget, 'chunk_size': chunk_size}, dataset=args.dataset)
+    # print_config(draft, target, prefill, gamma, top_k, top_p, temperature, file_path=None, method="TriForce", spec_args={'budget': args.budget, 'chunk_size': chunk_size}, dataset=args.dataset)
 
     ######## Warm up for our method ########
     if args.infer_mode == "zero-shot":
