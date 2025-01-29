@@ -60,6 +60,7 @@ def TriForce(tokenizer, graph_engine, input_ids, gamma=4, max_len=256, top_k=-1,
     draft_count = 0
 
     next_token = sample(norm_logits(logits[:,-1,:], temperature=temperature ,top_k=top_k, top_p=top_p))
+    out = next_token.clone()
     
     if verbose:
         spec_stream(next_token[0], tokenizer, 'cyan')
@@ -105,6 +106,7 @@ def TriForce(tokenizer, graph_engine, input_ids, gamma=4, max_len=256, top_k=-1,
                 pass_tokens[:, count] = pred_token_idx
                 if verbose:
                     spec_stream(i, tokenizer, 'green')
+                out = torch.cat([out, pred_token_idx], dim=1)
                 # if eos
                 if tokenizer.eos_token_id == i:
                     draft_count -= gamma2 - count
@@ -113,6 +115,7 @@ def TriForce(tokenizer, graph_engine, input_ids, gamma=4, max_len=256, top_k=-1,
                 resample_count += 1
                 n += 1
                 pred_token_idx = sample(max_fn(verify_prob-speculation_prob))
+                out = torch.cat([out, pred_token_idx], dim=1)
                 pass_tokens[:, count+1] = pred_token_idx
                 if verbose:
                     spec_stream(pred_token_idx, tokenizer, 'red')
@@ -129,6 +132,7 @@ def TriForce(tokenizer, graph_engine, input_ids, gamma=4, max_len=256, top_k=-1,
             target_sample_count += 1
             n += 1
             pred_token_idx = sample(verify_probs[-1])
+            out = torch.cat([out, pred_token_idx], dim=1)
             pass_tokens[:, count+1] = pred_token_idx
             if verbose:
                 spec_stream(pred_token_idx, tokenizer, 'blue')
@@ -144,21 +148,21 @@ def TriForce(tokenizer, graph_engine, input_ids, gamma=4, max_len=256, top_k=-1,
     time2 = time.time()
     acceptance_rate = accepted_count / draft_count
     avg_tokens = accepted_count / draft_count * gamma
-    if verbose:
-        print(f"Use {time2 - time1} sec to generate {n} tokens (now {graph_engine.engine.kv_cache.seq_len} tokens), Tokens/s: {n / (time2 - time1)}", flush=True)
-        print(f"accepted rate {acceptance_rate}, avg generated tokens {avg_tokens}")
+    # if verbose:
+    #     print(f"Use {time2 - time1} sec to generate {n} tokens (now {graph_engine.engine.kv_cache.seq_len} tokens), Tokens/s: {n / (time2 - time1)}", flush=True)
+    #     print(f"accepted rate {acceptance_rate}, avg generated tokens {avg_tokens}")
 
-    if file_path is not None:
-        header = "target,acceptance_rate,token/s,avg_tokens,prefill,gen_len,dataset,acc_rate_middle,latency\n"
-        entry = f"{graph_engine.engine.model.config._name_or_path},{acceptance_rate},{n / (time2 - time1)},{avg_tokens},{input_ids.shape[1]},{n},{dataset},{np.array(acc_rate_middle_list).mean()},{(time2 - time1)/n}\n"
+    # if file_path is not None:
+    #     header = "target,acceptance_rate,token/s,avg_tokens,prefill,gen_len,dataset,acc_rate_middle,latency\n"
+    #     entry = f"{graph_engine.engine.model.config._name_or_path},{acceptance_rate},{n / (time2 - time1)},{avg_tokens},{input_ids.shape[1]},{n},{dataset},{np.array(acc_rate_middle_list).mean()},{(time2 - time1)/n}\n"
 
-        if spec_args is not None:
-            for k, v in spec_args.items():
-                header=header.replace("\n", f",{k}\n")
-                entry=entry.replace("\n", f",{v}\n")
-        log_csv(file_path, header, entry)
+    #     if spec_args is not None:
+    #         for k, v in spec_args.items():
+    #             header=header.replace("\n", f",{k}\n")
+    #             entry=entry.replace("\n", f",{v}\n")
+    #     log_csv(file_path, header, entry)
 
-    return acceptance_rate, n / (time2 - time1)
+    return acceptance_rate, n / (time2 - time1), out
 
 @torch.inference_mode()
 def Middle_Spec(next_token, graph_engine, gamma, verbose, tokenizer):
