@@ -73,11 +73,25 @@ if __name__ == "__main__":
     top_k = -1
     top_p = args.top_p
     temperature = args.temp
-    prefill = args.prefill
+    prefill = 120000
     gamma = args.gamma
     verbose = args.verbose
     chunk_size = args.chunk_size
     max_budget = args.budget
+    
+    gen_len = 128
+    draft_cache_budget = args.draft_cache_budget
+    recent_size = draft_cache_budget - 16 - gamma
+    cache = FlashSimpleCache(target, prefill+gen_len+16)
+    graph_cache = RetrievalCache(target, max_budget=max_budget, prefill=prefill, gamma=gamma, chunk_size=chunk_size)
+    draft_cache = StreamingLLMEvictionCache(draft, start_size=16, recent_size=recent_size, gamma=gamma)
+
+    graph_engine = GraphInferenceEngine(target, cache, graph_cache, draft, draft_cache)
+    graph_engine.initialize_cuda_graph(gamma, probs=True, temperature=temperature, top_p=top_p)
+
+    cache.print_status()
+    graph_cache.print_status()
+    draft_cache.print_status()
 
     # print_config(draft, target, prefill, gamma, top_k, top_p, temperature, file_path=None, method="TriForce", spec_args={'budget': args.budget, 'chunk_size': chunk_size}, dataset=args.dataset)
 
@@ -98,20 +112,6 @@ if __name__ == "__main__":
         query = query_template.replace('$DOC$', long_context.strip()).replace('$Q$', item['question'].strip()).replace('$C_A$', item['choice_A'].strip()).replace('$C_B$', item['choice_B'].strip()).replace('$C_C$', item['choice_C'].strip()).replace('$C_D$', item['choice_D'].strip())
         
         if args.infer_mode == "zero-shot":
-            gen_len = 128
-            draft_cache_budget = args.draft_cache_budget
-            recent_size = draft_cache_budget - 16 - gamma
-            cache = FlashSimpleCache(target, prefill+gen_len+16)
-            graph_cache = RetrievalCache(target, max_budget=max_budget, prefill=prefill, gamma=gamma, chunk_size=chunk_size)
-            draft_cache = StreamingLLMEvictionCache(draft, start_size=16, recent_size=recent_size, gamma=gamma)
-
-            graph_engine = GraphInferenceEngine(target, cache, graph_cache, draft, draft_cache)
-            graph_engine.initialize_cuda_graph(gamma, probs=True, temperature=temperature, top_p=top_p)
-
-            cache.print_status()
-            graph_cache.print_status()
-            draft_cache.print_status()
-            
             messages = [
                 {"role": "system", "content": "You are a knowledgeable person."},
                 {"role": "user", "content": query},
