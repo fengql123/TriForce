@@ -132,7 +132,7 @@ def TriForce(tokenizer, graph_engine, input_ids, gamma=4, max_len=256, top_k=-1,
             target_sample_count += 1
             n += 1
             pred_token_idx = sample(verify_probs[-1])
-            out = torch.cat([out, pred_token_idx], dim=1)
+            out = torch.cat([out, pred_token_idx.unsqueeze(0)], dim=1)
             pass_tokens[:, count+1] = pred_token_idx
             if verbose:
                 spec_stream(pred_token_idx, tokenizer, 'blue')
