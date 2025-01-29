@@ -148,9 +148,9 @@ def TriForce(tokenizer, graph_engine, input_ids, gamma=4, max_len=256, top_k=-1,
     time2 = time.time()
     acceptance_rate = accepted_count / draft_count
     avg_tokens = accepted_count / draft_count * gamma
-    # if verbose:
-    #     print(f"Use {time2 - time1} sec to generate {n} tokens (now {graph_engine.engine.kv_cache.seq_len} tokens), Tokens/s: {n / (time2 - time1)}", flush=True)
-    #     print(f"accepted rate {acceptance_rate}, avg generated tokens {avg_tokens}")
+    
+    print(f"Use {time2 - time1} sec to generate {n} tokens (now {graph_engine.engine.kv_cache.seq_len} tokens), Tokens/s: {n / (time2 - time1)}", flush=True)
+    print(f"accepted rate {acceptance_rate}, avg generated tokens {avg_tokens}")
 
     # if file_path is not None:
     #     header = "target,acceptance_rate,token/s,avg_tokens,prefill,gen_len,dataset,acc_rate_middle,latency\n"
