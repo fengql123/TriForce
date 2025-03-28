@@ -7,7 +7,6 @@ from transformers.models.llama.modeling_llama import(
     LlamaRMSNorm,
     LlamaConfig,
     PreTrainedModel,
-    apply_rotary_pos_emb,
     ACT2FN
 )
 
@@ -157,6 +156,24 @@ class LlamaMLP(nn.Module):
         down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))
 
         return down_proj
+    
+    
+def rotate_half(x):
+    """Rotates half the hidden dims of the input."""
+    x1 = x[..., : x.shape[-1] // 2]
+    x2 = x[..., x.shape[-1] // 2 :]
+    return torch.cat((-x2, x1), dim=-1)
+    
+
+def apply_rotary_pos_emb(q, k, cos, sin, position_ids=None):
+    cos = cos[position_ids]
+    sin = sin[position_ids]
+    cos = cos.unsqueeze(1)
+    sin = sin.unsqueeze(1)
+
+    q_embed = (q * cos) + (rotate_half(q) * sin)
+    k_embed = (k * cos) + (rotate_half(k) * sin)
+    return q_embed, k_embed
 
 class LlamaAttention(nn.Module):
     def __init__(self, config: LlamaConfig, layer_idx: Optional[int] = None, flash=False):

@@ -27,7 +27,7 @@ class FlashSimpleCache(Cache):
         self.head_dim = self.hidden_size // model.config.num_attention_heads
         self.layers = model.config.num_hidden_layers
 
-        dtype = model.model.layers[0].self_attn.q_proj.weight.dtype
+        dtype = model.model.layers[0].self_attn.o_proj.weight.dtype
 
         self.key_cache = torch.zeros([self.layers, 1, self.max_budget, self.num_heads, self.head_dim], dtype=dtype).to(model.device)
         self.value_cache = torch.zeros([self.layers, 1, self.max_budget, self.num_heads, self.head_dim], dtype=dtype).to(model.device)
@@ -70,7 +70,7 @@ class OffloadingFlashSimpleCache(Cache):
         self.head_dim = self.hidden_size // model.config.num_attention_heads
         self.layers = model.config.num_hidden_layers
 
-        dtype = model.model.layers[0].self_attn.q_proj.weight.dtype
+        dtype = model.model.layers[0].self_attn.o_proj.weight.dtype
         self.device = model.device
 
         self.key_cache = torch.zeros([self.layers, 1, self.max_budget, self.num_heads, self.head_dim], dtype=dtype, device='cpu').pin_memory()
@@ -133,8 +133,8 @@ class RetrievalCache(Cache):
         self.head_dim = self.hidden_size // model.config.num_attention_heads
         self.layers = model.config.num_hidden_layers
 
-        dtype = model.model.layers[0].self_attn.q_proj.weight.dtype
-
+        dtype = model.model.layers[0].self_attn.o_proj.weight.dtype
+        
         self.key_cache = torch.zeros([self.layers, 1, self.real_budget, self.num_heads, self.head_dim], dtype=dtype).to(model.device)
         self.value_cache = torch.zeros([self.layers, 1, self.real_budget, self.num_heads, self.head_dim], dtype=dtype).to(model.device)
 

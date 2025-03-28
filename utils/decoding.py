@@ -38,16 +38,18 @@ def Autoregressive(tokenizer, graph_engine, input_ids, max_len=256, top_k=-1, to
 
 
 @torch.inference_mode()
-def TriForce(tokenizer, graph_engine, input_ids, gamma=4, max_len=256, top_k=-1, top_p=0.9, temperature=0.6, verbose=False, file_path=None, dataset=None, spec_args=None):
+def TriForce(tokenizer, graph_engine, input_ids, gamma=4, max_len=256, top_k=-1, top_p=0.9, temperature=0.6, verbose=False, file_path=None, dataset=None, spec_args=None, return_tokens=False):
 
     # reset all cache
     graph_engine.engine.kv_cache.reset()
     graph_engine.engine.graph_cache.reset()
     graph_engine.engine.draft_cache.reset()
 
+    prefill_start_time = time.time()
     logits = graph_engine.inference(input_ids=input_ids[:,:-1])
     logits = graph_engine.inference(input_ids=input_ids[:,-1:])
     _ = graph_engine.graph_draft_prefill(input_ids=input_ids)
+    prefill_time = time.time() - prefill_start_time
 
     if verbose:
         graph_engine.engine.kv_cache.print_status()
@@ -61,6 +63,8 @@ def TriForce(tokenizer, graph_engine, input_ids, gamma=4, max_len=256, top_k=-1,
 
     next_token = sample(norm_logits(logits[:,-1,:], temperature=temperature ,top_k=top_k, top_p=top_p))
     
+    generated_tokens = [next_token.item()]
+    
     if verbose:
         spec_stream(next_token[0], tokenizer, 'cyan')
 
@@ -68,6 +72,8 @@ def TriForce(tokenizer, graph_engine, input_ids, gamma=4, max_len=256, top_k=-1,
     n = 0
     time1 = time.time()
     while n < max_len:
+        print(generated_tokens)
+        
         if next_token.shape == torch.Size([1]):
             next_token = next_token.unsqueeze(0)
         
@@ -102,6 +108,8 @@ def TriForce(tokenizer, graph_engine, input_ids, gamma=4, max_len=256, top_k=-1,
                 n += 1
                 pred_token_idx = torch.tensor([[i]]).to(graph_engine.engine.model.device)
                 pass_tokens[:, count] = pred_token_idx
+                
+                generated_tokens.append(int(i))
                 if verbose:
                     spec_stream(i, tokenizer, 'green')
                 # if eos
@@ -113,6 +121,7 @@ def TriForce(tokenizer, graph_engine, input_ids, gamma=4, max_len=256, top_k=-1,
                 n += 1
                 pred_token_idx = sample(max_fn(verify_prob-speculation_prob))
                 pass_tokens[:, count+1] = pred_token_idx
+                generated_tokens.append(pred_token_idx.item())
                 if verbose:
                     spec_stream(pred_token_idx, tokenizer, 'red')
                 break
@@ -129,6 +138,7 @@ def TriForce(tokenizer, graph_engine, input_ids, gamma=4, max_len=256, top_k=-1,
             n += 1
             pred_token_idx = sample(verify_probs[-1])
             pass_tokens[:, count+1] = pred_token_idx
+            generated_tokens.append(pred_token_idx.item())
             if verbose:
                 spec_stream(pred_token_idx, tokenizer, 'blue')
             count += 1
@@ -156,8 +166,19 @@ def TriForce(tokenizer, graph_engine, input_ids, gamma=4, max_len=256, top_k=-1,
                 header=header.replace("\n", f",{k}\n")
                 entry=entry.replace("\n", f",{v}\n")
         log_csv(file_path, header, entry)
+        
+    latency = {
+        "prefill_time": prefill_time,
+        "decoding_time": time2 - time1
+    }
+    latency['num_tokens_generated'] = n
+    latency['tokens_per_second'] = n / (time2 - time1)
+    latency['acceptance_rate'] = acceptance_rate
 
-    return acceptance_rate, n / (time2 - time1)
+    if return_tokens:
+        return generated_tokens, latency
+    else:
+        return acceptance_rate, n / (time2 - time1)
 
 @torch.inference_mode()
 def Middle_Spec(next_token, graph_engine, gamma, verbose, tokenizer):

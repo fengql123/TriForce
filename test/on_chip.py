@@ -12,6 +12,7 @@ from tqdm import tqdm
 from data.dataset import get_dataset
 from models.modeling_llama import LlamaForCausalLM
 from models.modeling_llama_68m import LlamaForCausalLM as LlamaForCausalLM_68M
+from models.modelling_phi3 import Phi3ForCausalLM
 from models.cache import FlashSimpleCache, StreamingLLMEvictionCache, RetrievalCache
 from utils.decoding import Autoregressive, TriForce
 from utils.misc import print_config
@@ -46,14 +47,18 @@ if __name__ == "__main__":
     ######## model initialization ########
     if args.target == 'llama-7B-128K':
         target = LlamaForCausalLM.from_pretrained("NousResearch/Yarn-Llama-2-7b-128k", torch_dtype=torch.float16, device_map="cuda:0")
+    elif args.target == 'microsoft/Phi-3-mini-128k-instruct':
+        target = Phi3ForCausalLM.from_pretrained(
+            args.target, torch_dtype=torch.float16, device_map="cuda:0", attn_implementation="flash_attention_2")
     else:
         raise NotImplementedError
+        
     target = target.eval()
 
     draft = LlamaForCausalLM_68M.from_pretrained("JackFram/llama-68m", torch_dtype=torch.float16, device_map="cuda:0")
     draft = draft.eval()
 
-    tokenizer = AutoTokenizer.from_pretrained("NousResearch/Yarn-Llama-2-7b-128k", use_fast=True, legacy=False)
+    tokenizer = AutoTokenizer.from_pretrained(args.target, use_fast=True, legacy=False)
     tokenized_prompts = get_dataset(dataset_name=args.dataset, tokenizer=tokenizer, datalen=args.prefill)
 
     ######## sampling parameters ########
